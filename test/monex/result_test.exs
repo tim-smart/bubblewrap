@@ -1,8 +1,8 @@
-defmodule MonExResultTest do
+defmodule BubblewrapResultTest do
   use ExUnit.Case
-  doctest MonEx.Result, import: true
-  import MonEx.Result
-  import MonEx
+  doctest Bubblewrap.Result, import: true
+  import Bubblewrap.Result
+  import Bubblewrap
 
   test "basic" do
     a = ok(5)

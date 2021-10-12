@@ -1,9 +1,9 @@
-defmodule MonEx.Result do
+defmodule Bubblewrap.Result do
   @moduledoc """
   Result module provides Result type with utility functions.
   """
 
-  alias MonEx.Option
+  alias Bubblewrap.Option
 
   defmacro ok(res) do
     quote do
@@ -67,25 +67,25 @@ defmodule MonEx.Result do
   @spec unwrap(t(res, err), res | (err -> res)) :: res when res: any, err: any
   def unwrap(result, fallback \\ nil)
   def unwrap(ok(x), _), do: x
-  def unwrap(error(m), nil), do: raise m
+  def unwrap(error(m), nil), do: raise(m)
   def unwrap(error(m), f) when is_function(f, 1), do: f.(m)
   def unwrap(error(_), fallback), do: fallback
 
   @doc """
-  Converts Result into Option: `ok(val)` -> `some(val)`, `error(e)` -> `none()`.
+  Converts Result into Option: `ok(val)` -> `val`, `error(e)` -> `nil`.
   Useful when you don't care about the error value and only what to emphasize that
   nothing has been found.
 
   ## Examples
       iex> unwrap_option(ok(5))
-      {:some, 5} # same as some(5)
+      5
 
       iex> unwrap_option(error(:uh_oh))
-      {:none} # none()
+      nil
   """
   @spec unwrap_option(t(res, any)) :: Option.t(res) when res: any
-  def unwrap_option(ok(x)), do: {:some, x}
-  def unwrap_option(error(_)), do: {:none}
+  def unwrap_option(ok(x)), do: x
+  def unwrap_option(error(_)), do: nil
 
   @doc """
   Returns self if it is `ok(x)`, or evaluates supplied lambda that expected
@@ -101,11 +101,14 @@ defmodule MonEx.Result do
       iex> error("WTF") |> fallback(ok(5))
       ok(5)
   """
-  @spec fallback(t(res, err), t(res, err) | (err -> t(res, err))) :: t(res, err) when res: any, err: any
+  @spec fallback(t(res, err), t(res, err) | (err -> t(res, err))) :: t(res, err)
+        when res: any, err: any
   def fallback(ok(x), _), do: ok(x)
+
   def fallback(error(m), f) when is_function(f, 1) do
     f.(m)
   end
+
   def fallback(error(_), any), do: any
 
   @doc """
@@ -120,7 +123,8 @@ defmodule MonEx.Result do
     Enum.reduce(results, [], fn
       ok(res), acc -> [res | acc]
       error(_), acc -> acc
-    end) |> Enum.reverse
+    end)
+    |> Enum.reverse()
   end
 
   @doc """
@@ -135,7 +139,8 @@ defmodule MonEx.Result do
     Enum.reduce(results, [], fn
       ok(_), acc -> acc
       error(err), acc -> [err | acc]
-    end) |> Enum.reverse
+    end)
+    |> Enum.reverse()
   end
 
   @doc """
@@ -151,13 +156,20 @@ defmodule MonEx.Result do
   @spec partition([t(res, err)]) :: %{ok: [res], error: [err]} when res: any, err: any
   def partition(results) when is_list(results) do
     base = %{ok: [], error: []}
-    results = Enum.group_by(results, fn
-      ok(_) -> :ok
-      error(_) -> :error
-    end, fn
-      ok(res) -> res
-      error(err) -> err
-    end)
+
+    results =
+      Enum.group_by(
+        results,
+        fn
+          ok(_) -> :ok
+          error(_) -> :error
+        end,
+        fn
+          ok(res) -> res
+          error(err) -> err
+        end
+      )
+
     Map.merge(base, results)
   end
 
@@ -186,12 +198,15 @@ defmodule MonEx.Result do
   @doc false
   @spec retry_rec(integer, integer, (() -> t(res, err))) :: t(res, err) when res: any, err: any
   def retry_rec(0, _delay, lambda), do: lambda.()
+
   def retry_rec(n, delay, lambda) do
     case lambda.() do
       error(_) ->
         :timer.sleep(delay)
         retry_rec(n - 1, delay, lambda)
-      ok -> ok
+
+      ok ->
+        ok
     end
   end
 
@@ -229,11 +244,23 @@ defmodule MonEx.Result do
   """
 
   defmacro try_result(mode \\ :full, do: exp) do
-    error_handler = case mode do
-      :message -> quote do e -> error(e.message) end
-      :module -> quote do e -> error(e.__struct__) end
-      _ -> quote do e -> error(e) end
-    end
+    error_handler =
+      case mode do
+        :message ->
+          quote do
+            e -> error(e.message)
+          end
+
+        :module ->
+          quote do
+            e -> error(e.__struct__)
+          end
+
+        _ ->
+          quote do
+            e -> error(e)
+          end
+      end
 
     quote do
       try do
