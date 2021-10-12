@@ -60,7 +60,7 @@ defmodule Bubblewrap do
   alias Bubblewrap.{Option, Result}
   @typep m(a, b) :: Option.t(a) | Result.t(a, b)
 
-  defmacro __using__ do
+  defmacro __using__(_opts \\ []) do
     quote do
       import Bubblewrap
       import Bubblewrap.Option
