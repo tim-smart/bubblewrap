@@ -1,12 +1,11 @@
 # Bubblewrap
 
-Fork of `MonEx`, simplifying the `Option` type to be value that can be `nil`.
+Fork of `MonEx`, simplifying the types to be idiomatic Elixir.
 
 Bubblewrap implements two most common monadic data types:
 
 - `Bubblewrap.Result` - container for a result of operation or error.
-  Result can be created using a constructor macro: `ok(value)` or `error(e)`,
-  where underlying structure is a tuple: `{:ok, value}` or `{:error, e}` respectively.
+  Where the underlying structure is a tuple: `{:ok, value}` or `{:error, e}` respectively.
 
 - `Bubblewrap.Option` - container for a value that might be present or missing.
   It is a simple wrapper around a value that could be `nil`.
@@ -34,16 +33,16 @@ With Bubblewrap you can do the same using `flat_map` operation:
 
     final = op1(x) |> flat_map(&op2/1) |> flat_map(&op3/1)
 
-Once any of the operations returns `error(e)`, following operations
+Once any of the operations returns `{:error, e}`, following operations
 are skipped and the error is returned. You can either do something
 based on pattern matching or provide a fallback (can be a function or a default value).
 
     case final do
-      ok(value) -> IO.puts(value)
-      error(e) -> IO.puts("Oh, no, the error occured!")
+      {:ok, value} -> IO.puts(value)
+      {:error, e} -> IO.puts("Oh, no, the error occured!")
     end
 
-    final |> fallback(ok("No problem, I got it"))
+    final |> fallback({:ok, "No problem, I got it"})
 
 ## Option
 
@@ -65,6 +64,6 @@ The package can be installed as:
 
    ```elixir
    def deps do
-     [{:bubblewrap, "~> 0.1.0"}]
+     [{:bubblewrap, "~> 0.2.2"}]
    end
    ```

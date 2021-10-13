@@ -22,7 +22,7 @@ defmodule Bubblewrap.Mixfile do
 
   defp description do
     """
-    Monadic types collection. Option (Maybe) - val/nil. Result - ok(val)/error(err).
+    Monadic types collection. Option (Maybe) - val/nil. Result - {:ok, val}/{:error, err}.
     """
   end
 

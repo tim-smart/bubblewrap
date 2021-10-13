@@ -3,7 +3,7 @@ defmodule Bubblewrap do
   Bubblewrap implements two most common monadic data types:
 
     * `Bubblewrap.Result` - container for a result of operation or error.
-      Result can be created using a constructor macro: `ok(value)` or `error(e)`,
+      Result can be created using a constructor macro: `{:ok, value}` or `{:error, e}`,
       where underlying structure is a tuple: `{:ok, value}` or `{:error, e}` respectively.
 
     * `Bubblewrap.Option` - container for a value that might be present or missing.
@@ -32,16 +32,16 @@ defmodule Bubblewrap do
 
       final = op1(x) |> flat_map(&op2/1) |> flat_map(&op3/1)
 
-  Once any of the operations returns `error(e)`, following operations
+  Once any of the operations returns `{:error, e}`, following operations
   are skipped and the error is returned. You can either do something
   based on pattern matching or provide a fallback (can be a function or a default value).
 
       case final do
-        ok(value) -> IO.puts(value)
-        error(e) -> IO.puts("Oh, no, the error occured!")
+        {:ok, value} -> IO.puts(value)
+        {:error, e} -> IO.puts("Oh, no, the error occured!")
       end
 
-      final |> fallback(ok("No problem, I got it"))
+      final |> fallback({:ok, "No problem, I got it"})
 
   ## Option
 
@@ -56,19 +56,8 @@ defmodule Bubblewrap do
 
   See docs per Result and Option modules for details.
   """
-  import Bubblewrap.{Result}
   alias Bubblewrap.{Option, Result}
   @typep m(a, b) :: Option.t(a) | Result.t(a, b)
-
-  defmacro __using__(_opts \\ []) do
-    quote do
-      import Bubblewrap
-      import Bubblewrap.Option
-      import Bubblewrap.Result
-      alias Bubblewrap.Option
-      alias Bubblewrap.Result
-    end
-  end
 
   @doc """
   Transforms the content of monadic type.
@@ -83,8 +72,8 @@ defmodule Bubblewrap do
       nil |> map(f) == nil
   """
   @spec map(m(a, b), (a -> c)) :: m(c, b) when a: any, b: any, c: any
-  def map(ok(x), f) when is_function(f, 1), do: ok(f.(x))
-  def map(error(m), f) when is_function(f, 1), do: error(m)
+  def map({:ok, x}, f) when is_function(f, 1), do: {:ok, f.(x)}
+  def map({:error, m}, f) when is_function(f, 1), do: {:error, m}
 
   def map(nil, f) when is_function(f, 1), do: nil
   def map(x, f) when is_function(f, 1), do: f.(x)
@@ -105,8 +94,8 @@ defmodule Bubblewrap do
       0 |> flat_map(f) == nil
   """
   @spec flat_map(m(a, b), (a -> m(c, b))) :: m(c, b) when a: any, b: any, c: any
-  def flat_map(ok(x), f) when is_function(f, 1), do: f.(x)
-  def flat_map(error(m), f) when is_function(f, 1), do: error(m)
+  def flat_map({:ok, x}, f) when is_function(f, 1), do: f.(x)
+  def flat_map({:error, m}, f) when is_function(f, 1), do: {:error, m}
 
   def flat_map(nil, f) when is_function(f, 1), do: nil
   def flat_map(x, f) when is_function(f, 1), do: f.(x)
@@ -124,14 +113,14 @@ defmodule Bubblewrap do
   This will print: 5 10
   """
   @spec foreach(m(a, b), (a -> no_return)) :: m(a, b) when a: any, b: any
-  def foreach(ok(x) = res, f) when is_function(f, 1),
+  def foreach({:ok, x} = res, f) when is_function(f, 1),
     do:
       (
         f.(x)
         res
       )
 
-  def foreach(error(_) = z, _), do: z
+  def foreach({:error, _} = z, _), do: z
 
   def foreach(nil = z, _), do: z
 

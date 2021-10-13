@@ -78,10 +78,10 @@ defmodule Bubblewrap.Option do
 
   ## Examples
       iex> 5 |> ok_or_else(2)
-      {:ok, 5} # Essentially ok(5)
+      {:ok, 5}
 
       ...> nil |> ok_or_else(:missing_value)
-      {:error, :missing_value} # Essentially error(:missing_value)
+      {:error, :missing_value}
 
       ...> nil |> ok_or_else(fn -> :oh_no end)
       {:error, :oh_no}
