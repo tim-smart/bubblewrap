@@ -272,7 +272,7 @@ defmodule Bubblewrap.Result do
 
     quote do
       try do
-        wrap(unquote(exp))
+        Bubblewrap.Result.wrap(unquote(exp))
       rescue
         unquote(error_handler)
       end
