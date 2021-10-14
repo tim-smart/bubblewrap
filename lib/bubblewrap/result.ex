@@ -262,4 +262,58 @@ defmodule Bubblewrap.Result do
       end
     end
   end
+
+  @doc """
+  Transforms the content of monadic type.
+  Function is applied only if it's `ok`.
+  Otherwise value stays intact.
+
+  Example:
+      f = fn (x) ->
+        x * 2
+      end
+      {:ok, 5} |> map(f) == {:ok, 10}
+      {:error, "fail"} |> map(f) == {:error, "fail"}
+  """
+  @spec map(t(a, b), (a -> c)) :: t(c, b) when a: any, b: any, c: any
+  def map({:ok, x}, f) when is_function(f, 1), do: {:ok, f.(x)}
+  def map({:error, m}, f) when is_function(f, 1), do: {:error, m}
+
+  @doc """
+  Applies function that returns monadic type itself to the content
+  of the monadic type. This is useful in a chain of operations, where
+  argument to the next op has to be unwrapped to proceed.
+
+  Example:
+      f = fn (x) ->
+        {:ok, x * 2}
+      end
+      {:ok, 5} |> flat_map(f) == {:ok, 10}
+      {:error, "fail"} |> flat_map(f) == {:error, "fail"}
+  """
+  @spec flat_map(t(a, b), (a -> t(c, b))) :: t(c, b) when a: any, b: any, c: any
+  def flat_map({:ok, x}, f) when is_function(f, 1), do: f.(x)
+  def flat_map({:error, m}, f) when is_function(f, 1), do: {:error, m}
+
+  @doc """
+  Performs a calculation with the content of monadic container and returns
+  the argument intact. Even though the convention says to return nothing (Unit)
+  this one passes value along for convenience — this way we can perform more
+  than one operation.
+
+      {:ok, 5}
+      |> foreach(fn x -> IO.inspect(x) end)
+      |> foreach(fn x -> IO.inspect(2 * x) end)
+
+  This will print: 5 10
+  """
+  @spec foreach(t(a, b), (a -> no_return)) :: t(a, b) when a: any, b: any
+  def foreach({:ok, x} = res, f) when is_function(f, 1),
+    do:
+      (
+        f.(x)
+        res
+      )
+
+  def foreach({:error, _} = z, _), do: z
 end

@@ -93,4 +93,67 @@ defmodule Bubblewrap.Option do
 
   def ok_or_else(nil, z), do: {:error, z}
   def ok_or_else(x, _), do: {:ok, x}
+
+  @doc """
+  Transforms the content of monadic type.
+  Function is applied only if it's not nil.
+  Otherwise value stays intact.
+
+  Example:
+      f = fn (x) ->
+        x * 2
+      end
+      5 |> map(f) == 10
+      nil |> map(f) == nil
+  """
+  @spec map(t(a), (a -> b)) :: t(b) when a: any, b: any
+  def map(nil, f) when is_function(f, 1), do: nil
+
+  def map(x, f) when is_function(f, 1) do
+    case f.(x) do
+      nil -> raise "Bubblewrap.Option.map can not return nil"
+      b -> b
+    end
+  end
+
+  @doc """
+  Applies function that returns monadic type itself to the content
+  of the monadic type. This is useful in a chain of operations, where
+  argument to the next op has to be unwrapped to proceed.
+
+  Example:
+      f = fn (x) ->
+        if x == 0 do
+          nil
+        else
+          1/x
+        end
+      5 |> flat_map(f) == 1/5
+      0 |> flat_map(f) == nil
+  """
+  @spec flat_map(t(a), (a -> t(b))) :: t(b) when a: any, b: any
+  def flat_map(nil, f) when is_function(f, 1), do: nil
+  def flat_map(x, f) when is_function(f, 1), do: f.(x)
+
+  @doc """
+  Performs a calculation with the content of monadic container and returns
+  the argument intact. Even though the convention says to return nothing (Unit)
+  this one passes value along for convenience — this way we can perform more
+  than one operation.
+
+      5
+      |> foreach(fn x -> IO.inspect(x) end)
+      |> foreach(fn x -> IO.inspect(2 * x) end)
+
+  This will print: 5 10
+  """
+  @spec foreach(t(a), (a -> no_return)) :: t(a) when a: any
+  def foreach(nil = z, _), do: z
+
+  def foreach(x = res, f) when is_function(f, 1),
+    do:
+      (
+        f.(x)
+        res
+      )
 end

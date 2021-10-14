@@ -2,7 +2,6 @@ defmodule BubblewrapOptionTest do
   use ExUnit.Case
   doctest Bubblewrap.Option, import: true
   import Bubblewrap.Option
-  import Bubblewrap
 
   test "is_some" do
     assert is_some(5)
@@ -31,6 +30,10 @@ defmodule BubblewrapOptionTest do
   test "map" do
     assert 5 |> map(&(&1 * 2)) == 10
     assert nil |> map(&(&1 * 2)) == nil
+
+    assert_raise RuntimeError, "Bubblewrap.Option.map can not return nil", fn ->
+      assert 5 |> map(fn _ -> nil end)
+    end
   end
 
   test "flat_map" do

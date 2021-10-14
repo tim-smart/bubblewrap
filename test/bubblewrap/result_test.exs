@@ -2,7 +2,6 @@ defmodule BubblewrapResultTest do
   use ExUnit.Case
   doctest Bubblewrap.Result, import: true
   import Bubblewrap.Result
-  import Bubblewrap
 
   test "is_ok" do
     assert is_ok({:ok, 5})
