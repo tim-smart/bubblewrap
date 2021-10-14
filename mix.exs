@@ -4,7 +4,7 @@ defmodule Bubblewrap.Mixfile do
   def project do
     [
       app: :bubblewrap,
-      version: "0.4.0",
+      version: "0.4.1",
       elixir: "~> 1.4",
       description: description(),
       package: package(),

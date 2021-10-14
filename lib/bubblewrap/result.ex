@@ -39,6 +39,26 @@ defmodule Bubblewrap.Result do
   def is_error(x), do: !is_ok(x)
 
   @doc """
+  Always returns a `Result`, transforming a plain value to `{:ok, x}` if it
+  isn't a result already.
+
+  ## Examples
+      iex> wrap({:ok, 5})
+      {:ok, 5}
+
+      iex> wrap(5)
+      {:ok, 5}
+
+      iex> wrap({:error, :uh_oh})
+      {:error, :uh_oh}
+  """
+  @spec wrap(t(res, err) | res) :: res when res: any, err: any
+  def wrap(result_or_value)
+  def wrap({:ok, _} = r), do: r
+  def wrap({:error, _} = r), do: r
+  def wrap(v), do: {:ok, v}
+
+  @doc """
   Returns value `x` if argument is `{:ok, x}`, raises `e` if `{:error, e}`.
   Second argument is a fallback. It can by a lambda accepting error, or some precomputed default value.
 
@@ -252,11 +272,7 @@ defmodule Bubblewrap.Result do
 
     quote do
       try do
-        case unquote(exp) do
-          {:ok, res} -> {:ok, res}
-          {:error, e} -> {:error, e}
-          x -> {:ok, x}
-        end
+        wrap(unquote(exp))
       rescue
         unquote(error_handler)
       end

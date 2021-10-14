@@ -41,6 +41,12 @@ defmodule BubblewrapResultTest do
     refute_received "WTF"
   end
 
+  test "wrap" do
+    assert {:ok, 5} == wrap({:ok, 5})
+    assert {:error, :uh_oh} == wrap({:error, :uh_oh})
+    assert {:ok, 5} == wrap(5)
+  end
+
   test "unwrap" do
     assert 5 == unwrap({:ok, 5})
 
