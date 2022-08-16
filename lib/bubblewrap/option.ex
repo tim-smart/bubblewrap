@@ -132,8 +132,29 @@ defmodule Bubblewrap.Option do
       0 |> flat_map(f) == nil
   """
   @spec flat_map(t(a), (a -> t(b))) :: t(b) when a: any, b: any
-  def flat_map(nil, f) when is_function(f, 1), do: nil
+  def flat_map(nil, _), do: nil
   def flat_map(x, f) when is_function(f, 1), do: f.(x)
+
+  @doc """
+  Applies function that returns a boolean using the value of the monadic type.
+  If false, the value will be set to nil.
+
+  Example:
+      f = fn (x) ->
+          x == 0
+        end
+      5 |> filter(f) == 5
+      0 |> filter(f) == nil
+  """
+  @spec filter(t(a), (a -> boolean())) :: t(a) when a: any
+  def filter(nil, _), do: nil
+
+  def filter(a, f) when is_function(f, 1) do
+    case f.(a) do
+      true -> a
+      false -> nil
+    end
+  end
 
   @doc """
   Performs a calculation with the content of monadic container and returns

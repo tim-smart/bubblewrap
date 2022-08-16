@@ -312,6 +312,36 @@ defmodule Bubblewrap.Result do
   def flat_map({:error, m}, f) when is_function(f, 1), do: {:error, m}
 
   @doc """
+  Applies function that returns a boolean using the value of the monadic type.
+  If false, the value will be set to the given error value.
+
+  Example:
+      f = fn (x) ->
+          x == 0
+        end
+
+      {:ok, 5} |> filter(f) == {:ok, 5}
+      0 |> filter(f) == nil
+  """
+  @spec filter(t(a, e1), (a -> boolean()), (a -> e2) | e2) :: t(a, e1 | e2)
+        when a: any, e1: any, e2: any
+  def filter({:error, _} = err, _, _), do: err
+
+  def filter({:ok, a}, f, fe) when is_function(f, 1) and is_function(fe, 1) do
+    case f.(a) do
+      true -> {:ok, a}
+      false -> {:error, fe.(a)}
+    end
+  end
+
+  def filter({:ok, a}, f, err) when is_function(f, 1) do
+    case f.(a) do
+      true -> {:ok, a}
+      false -> {:error, err}
+    end
+  end
+
+  @doc """
   Performs a calculation with the content of monadic container and returns
   the argument intact. Even though the convention says to return nothing (Unit)
   this one passes value along for convenience — this way we can perform more

@@ -30,6 +30,13 @@ defmodule BubblewrapResultTest do
     assert {:error, "Error"} |> flat_map(&{:ok, &1 * 2}) == {:error, "Error"}
   end
 
+  test "filter" do
+    assert {:ok, 5} |> filter(fn _ -> true end, :fail) == {:ok, 5}
+    assert {:ok, 5} |> filter(&(&1 == 5), :fail) == {:ok, 5}
+    assert {:ok, 5} |> filter(fn _ -> false end, :fail) == {:error, :fail}
+    assert {:ok, 5} |> filter(fn _ -> false end, fn _ -> :fail end) == {:error, :fail}
+  end
+
   test "foreach" do
     me = self()
     res = {:ok, 5} |> foreach(&send(me, &1))

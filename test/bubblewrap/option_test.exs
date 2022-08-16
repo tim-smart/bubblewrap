@@ -41,6 +41,11 @@ defmodule BubblewrapOptionTest do
     assert nil |> flat_map(&(&1 * 2)) == nil
   end
 
+  test "filter" do
+    assert 5 |> filter(&(&1 == 5)) == 5
+    assert 5 |> filter(&(&1 != 5)) == nil
+  end
+
   test "foreach" do
     me = self()
     res = 5 |> foreach(&send(me, &1))
